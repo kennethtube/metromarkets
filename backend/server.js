@@ -164,6 +164,18 @@ app.get("/api/me", (req, res) => {
     });
 });
 
+app.get("/auth/logout", (req, res) => {
+    req.session.destroy((err) => {
+        if (err) {
+            return res.status(500).json({
+                success: false,
+                message: "Logout failed."
+            });
+        }
+
+        res.redirect("https://kennethtube.github.io/metromarkets/");
+    });
+});
 // -------------------------
 // Start server
 // -------------------------
