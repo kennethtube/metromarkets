@@ -59,34 +59,65 @@ const markets = [
 
 let selected = null;
 
+
+// ================================
+// RENDER MARKETS
+// ================================
+
 function render() {
+
     const marketGrid = document.getElementById("marketGrid");
 
     marketGrid.innerHTML = markets.map(m => `
         <article class="market-card">
-            <span class="category">${m.category}</span>
 
-            <h3>${m.title}</h3>
+            <span class="category">
+                ${m.category}
+            </span>
 
-            <div class="prob">${m.yes}%</div>
+            <h3>
+                ${m.title}
+            </h3>
+
+            <div class="prob">
+                ${m.yes}%
+            </div>
 
             <div class="bar">
                 <div style="width:${m.yes}%"></div>
             </div>
 
             <div class="market-footer">
-                <span>${m.volume} • closes ${m.close}</span>
 
-                <button class="trade" onclick="openModal(${m.id})">
+                <span>
+                    ${m.volume} • closes ${m.close}
+                </span>
+
+                <button
+                    class="trade"
+                    onclick="openModal(${m.id})"
+                >
                     Trade →
                 </button>
+
             </div>
+
         </article>
     `).join("");
 }
 
+
+// ================================
+// OPEN MARKET MODAL
+// ================================
+
 function openModal(id) {
+
     selected = markets.find(m => m.id === id);
+
+    if (!selected) {
+        return;
+    }
 
     document.getElementById("modalCategory").textContent =
         selected.category;
@@ -103,58 +134,141 @@ function openModal(id) {
     document.getElementById("noPrice").textContent =
         (100 - selected.yes) + "¢";
 
-    document.getElementById("tradeModal").classList.remove("hidden");
+    document
+        .getElementById("tradeModal")
+        .classList
+        .remove("hidden");
 }
+
+
+// ================================
+// CLOSE MARKET MODAL
+// ================================
 
 function closeModal() {
-    document.getElementById("tradeModal").classList.add("hidden");
+
+    document
+        .getElementById("tradeModal")
+        .classList
+        .add("hidden");
 }
 
+
+// ================================
+// DEMO TRADE
+// ================================
+
 function placeTrade(side) {
+
     alert(
         `Demo action: Buy ${side}. Connect the trading backend before enabling real account balances or persistent trades.`
     );
 }
 
+
+// ================================
+// ROBLOX LOGIN
+// ================================
+
 function login() {
-    window.location.href = `${API_URL}/auth/roblox`;
+
+    window.location.href =
+        `${API_URL}/auth/roblox`;
 }
 
+
+// ================================
+// CHECK LOGIN
+// ================================
+
 async function checkLogin() {
+
     try {
-        const response = await fetch(`${API_URL}/api/me`, {
-            credentials: "include"
-        });
+
+        const response = await fetch(
+            `${API_URL}/api/me`,
+            {
+                credentials: "include"
+            }
+        );
 
         const data = await response.json();
 
-        const loginButton = document.getElementById("loginBtn");
+        const loginButton =
+            document.getElementById("loginBtn");
+
+
+        // ============================
+        // LOGGED IN
+        // ============================
 
         if (data.loggedIn) {
-            const username = `Roblox ID: ${data.user.sub}`;
 
+            const username =
+                `Roblox ID: ${data.user.sub}`;
+
+
+            // Load balance from PostgreSQL
+            document.getElementById("balance").textContent =
+                Number(data.balance).toLocaleString() + " MC";
+
+
+            // Account information
             document.getElementById("account").textContent =
                 username;
 
-            loginButton.textContent = "Logout";
+
+            // Change login button to logout
+            loginButton.textContent =
+                "Logout";
+
             loginButton.disabled = false;
+
 
             loginButton.onclick = () => {
-                window.location.href = `${API_URL}/auth/logout`;
+
+                window.location.href =
+                    `${API_URL}/auth/logout`;
+
             };
 
+
+            // Portfolio information
             document.getElementById("portfolioText").textContent =
                 `Logged in as ${username}. Your portfolio will appear here.`;
-        } else {
-            loginButton.textContent = "Login with Roblox";
+
+        }
+
+
+        // ============================
+        // NOT LOGGED IN
+        // ============================
+
+        else {
+
+            loginButton.textContent =
+                "Login with Roblox";
+
             loginButton.disabled = false;
+
             loginButton.onclick = login;
+
         }
 
     } catch (error) {
-        console.error("Login check failed:", error);
+
+        console.error(
+            "Login check failed:",
+            error
+        );
+
     }
 }
+
+
+// ================================
+// START APPLICATION
+// ================================
 
 render();
 checkLogin();
