@@ -50,17 +50,22 @@ app.use(session({
 // ================================
 
 app.get("/", (req, res) => {
+
     res.json({
         message: "MetroMarkets backend is running!"
     });
+
 });
 
 
 app.get("/api/test", (req, res) => {
+
     res.json({
         success: true,
-        message: "Frontend successfully connected to the MetroMarkets backend!"
+        message:
+            "Frontend successfully connected to the MetroMarkets backend!"
     });
+
 });
 
 
@@ -70,33 +75,59 @@ app.get("/api/test", (req, res) => {
 
 app.get("/auth/roblox", (req, res) => {
 
-    const state = crypto.randomBytes(32).toString("hex");
+    const state =
+        crypto.randomBytes(32).toString("hex");
 
-    const codeVerifier = crypto
-        .randomBytes(32)
-        .toString("base64url");
 
-    const codeChallenge = crypto
-        .createHash("sha256")
-        .update(codeVerifier)
-        .digest("base64url");
+    const codeVerifier =
+        crypto
+            .randomBytes(32)
+            .toString("base64url");
 
-    req.session.oauthState = state;
-    req.session.codeVerifier = codeVerifier;
 
-    const params = new URLSearchParams({
-        client_id: process.env.ROBLOX_CLIENT_ID,
-        redirect_uri: process.env.ROBLOX_REDIRECT_URI,
-        scope: "openid",
-        response_type: "code",
-        state: state,
-        code_challenge: codeChallenge,
-        code_challenge_method: "S256"
-    });
+    const codeChallenge =
+        crypto
+            .createHash("sha256")
+            .update(codeVerifier)
+            .digest("base64url");
+
+
+    req.session.oauthState =
+        state;
+
+    req.session.codeVerifier =
+        codeVerifier;
+
+
+    const params =
+        new URLSearchParams({
+            client_id:
+                process.env.ROBLOX_CLIENT_ID,
+
+            redirect_uri:
+                process.env.ROBLOX_REDIRECT_URI,
+
+            scope:
+                "openid",
+
+            response_type:
+                "code",
+
+            state:
+                state,
+
+            code_challenge:
+                codeChallenge,
+
+            code_challenge_method:
+                "S256"
+        });
+
 
     res.redirect(
         `https://apis.roblox.com/oauth/v1/authorize?${params.toString()}`
     );
+
 });
 
 
@@ -108,64 +139,104 @@ app.get("/auth/roblox/callback", async (req, res) => {
 
     try {
 
-        const { code, state } = req.query;
+        const {
+            code,
+            state
+        } = req.query;
+
 
         if (!code || !state) {
+
             return res
                 .status(400)
-                .send("Missing OAuth code or state.");
+                .send(
+                    "Missing OAuth code or state."
+                );
+
         }
 
-        if (state !== req.session.oauthState) {
+
+        if (
+            state !==
+            req.session.oauthState
+        ) {
+
             return res
                 .status(400)
-                .send("Invalid OAuth state.");
+                .send(
+                    "Invalid OAuth state."
+                );
+
         }
 
-        const codeVerifier = req.session.codeVerifier;
+
+        const codeVerifier =
+            req.session.codeVerifier;
+
 
         if (!codeVerifier) {
+
             return res
                 .status(400)
-                .send("Missing PKCE code verifier.");
+                .send(
+                    "Missing PKCE code verifier."
+                );
+
         }
 
 
-        const tokenResponse = await axios.post(
-            "https://apis.roblox.com/oauth/v1/token",
+        const tokenResponse =
+            await axios.post(
+                "https://apis.roblox.com/oauth/v1/token",
 
-            new URLSearchParams({
-                client_id: process.env.ROBLOX_CLIENT_ID,
-                client_secret: process.env.ROBLOX_CLIENT_SECRET,
-                grant_type: "authorization_code",
-                code: code,
-                code_verifier: codeVerifier
-            }).toString(),
+                new URLSearchParams({
 
-            {
-                headers: {
-                    "Content-Type":
-                        "application/x-www-form-urlencoded"
+                    client_id:
+                        process.env.ROBLOX_CLIENT_ID,
+
+                    client_secret:
+                        process.env.ROBLOX_CLIENT_SECRET,
+
+                    grant_type:
+                        "authorization_code",
+
+                    code:
+                        code,
+
+                    code_verifier:
+                        codeVerifier
+
+                }).toString(),
+
+                {
+                    headers: {
+                        "Content-Type":
+                            "application/x-www-form-urlencoded"
+                    }
                 }
-            }
-        );
+            );
 
 
         const accessToken =
-            tokenResponse.data.access_token;
+            tokenResponse
+                .data
+                .access_token;
 
 
-        const userResponse = await axios.get(
-            "https://apis.roblox.com/oauth/v1/userinfo",
-            {
-                headers: {
-                    Authorization: `Bearer ${accessToken}`
+        const userResponse =
+            await axios.get(
+                "https://apis.roblox.com/oauth/v1/userinfo",
+                {
+                    headers: {
+                        Authorization:
+                            `Bearer ${accessToken}`
+                    }
                 }
-            }
-        );
+            );
 
 
-        const robloxUser = userResponse.data;
+        const robloxUser =
+            userResponse.data;
 
 
         console.log(
@@ -174,10 +245,11 @@ app.get("/auth/roblox/callback", async (req, res) => {
         );
 
 
-        req.session.user = robloxUser;
+        req.session.user =
+            robloxUser;
 
 
-        // Create account if it doesn't already exist
+        // Create account if it doesn't exist
         await db.query(
             `
             INSERT INTO users (roblox_id)
@@ -197,17 +269,24 @@ app.get("/auth/roblox/callback", async (req, res) => {
             "https://kennethtube.github.io/metromarkets/"
         );
 
+
     } catch (error) {
 
         console.error(
             "Roblox OAuth error:",
-            error.response?.data || error.message
+            error.response?.data ||
+            error.message
         );
+
 
         res
             .status(500)
-            .send("Roblox login failed.");
+            .send(
+                "Roblox login failed."
+            );
+
     }
+
 });
 
 
@@ -232,25 +311,31 @@ app.get("/api/me", async (req, res) => {
             req.session.user.sub;
 
 
-        const result = await db.query(
-            `
-            SELECT
-                roblox_id,
-                balance,
-                created_at
-            FROM users
-            WHERE roblox_id = $1
-            `,
-            [robloxId]
-        );
+        const result =
+            await db.query(
+                `
+                SELECT
+                    roblox_id,
+                    balance,
+                    created_at
+                FROM users
+                WHERE roblox_id = $1
+                `,
+                [robloxId]
+            );
 
 
-        if (result.rows.length === 0) {
+        if (
+            result.rows.length === 0
+        ) {
 
-            return res.status(404).json({
-                loggedIn: false,
-                message: "Account not found."
-            });
+            return res
+                .status(404)
+                .json({
+                    loggedIn: false,
+                    message:
+                        "Account not found."
+                });
 
         }
 
@@ -260,16 +345,22 @@ app.get("/api/me", async (req, res) => {
 
 
         res.json({
+
             loggedIn: true,
 
             user: {
-                sub: account.roblox_id
+                sub:
+                    account.roblox_id
             },
 
-            balance: account.balance,
+            balance:
+                account.balance,
 
-            createdAt: account.created_at
+            createdAt:
+                account.created_at
+
         });
+
 
     } catch (error) {
 
@@ -278,12 +369,17 @@ app.get("/api/me", async (req, res) => {
             error.message
         );
 
-        res.status(500).json({
-            success: false,
-            message:
-                "Failed to load account."
-        });
+
+        res
+            .status(500)
+            .json({
+                success: false,
+                message:
+                    "Failed to load account."
+            });
+
     }
+
 });
 
 
@@ -295,14 +391,15 @@ app.get("/api/trades", async (req, res) => {
 
     try {
 
-        // Make sure the user is logged in
         if (!req.session.user) {
 
-            return res.status(401).json({
-                success: false,
-                message:
-                    "You must be logged in."
-            });
+            return res
+                .status(401)
+                .json({
+                    success: false,
+                    message:
+                        "You must be logged in."
+                });
 
         }
 
@@ -311,27 +408,35 @@ app.get("/api/trades", async (req, res) => {
             req.session.user.sub;
 
 
-        const result = await db.query(
-            `
-            SELECT
-                id,
-                market_id,
-                side,
-                amount,
-                price,
-                created_at
-            FROM trades
-            WHERE roblox_id = $1
-            ORDER BY created_at DESC, id DESC
-            `,
-            [robloxId]
-        );
+        const result =
+            await db.query(
+                `
+                SELECT
+                    id,
+                    market_id,
+                    side,
+                    amount,
+                    price,
+                    created_at
+                FROM trades
+                WHERE roblox_id = $1
+                ORDER BY
+                    created_at DESC,
+                    id DESC
+                `,
+                [robloxId]
+            );
 
 
         res.json({
+
             success: true,
-            trades: result.rows
+
+            trades:
+                result.rows
+
         });
+
 
     } catch (error) {
 
@@ -340,12 +445,133 @@ app.get("/api/trades", async (req, res) => {
             error.message
         );
 
-        res.status(500).json({
-            success: false,
-            message:
-                "Failed to load trades."
-        });
+
+        res
+            .status(500)
+            .json({
+                success: false,
+                message:
+                    "Failed to load trades."
+            });
+
     }
+
+});
+
+
+// ================================
+// GET USER POSITIONS
+// ================================
+
+app.get("/api/positions", async (req, res) => {
+
+    try {
+
+        // Make sure the user is logged in
+        if (!req.session.user) {
+
+            return res
+                .status(401)
+                .json({
+                    success: false,
+                    message:
+                        "You must be logged in."
+                });
+
+        }
+
+
+        const robloxId =
+            req.session.user.sub;
+
+
+        /*
+            A trade records how much MC was spent
+            and the price in cents.
+
+            Shares are calculated as:
+
+            shares =
+            amount / (price / 100)
+
+            which is equivalent to:
+
+            amount * 100 / price
+        */
+
+
+        const result =
+            await db.query(
+                `
+                SELECT
+                    market_id,
+                    side,
+
+                    SUM(amount) AS total_invested,
+
+                    SUM(
+                        amount * 100.0 / price
+                    ) AS shares,
+
+                    CASE
+                        WHEN SUM(
+                            amount * 100.0 / price
+                        ) = 0
+                        THEN 0
+
+                        ELSE
+                            SUM(amount)
+                            /
+                            SUM(
+                                amount * 100.0 / price
+                            )
+                            * 100
+                    END AS average_price
+
+                FROM trades
+
+                WHERE roblox_id = $1
+
+                GROUP BY
+                    market_id,
+                    side
+
+                ORDER BY
+                    market_id,
+                    side
+                `,
+                [robloxId]
+            );
+
+
+        res.json({
+
+            success: true,
+
+            positions:
+                result.rows
+
+        });
+
+
+    } catch (error) {
+
+        console.error(
+            "Positions database error:",
+            error.message
+        );
+
+
+        res
+            .status(500)
+            .json({
+                success: false,
+                message:
+                    "Failed to load positions."
+            });
+
+    }
+
 });
 
 
@@ -357,16 +583,19 @@ app.post("/api/account/spend", async (req, res) => {
 
     let client;
 
+
     try {
 
         // Make sure the user is logged in
         if (!req.session.user) {
 
-            return res.status(401).json({
-                success: false,
-                message:
-                    "You must be logged in."
-            });
+            return res
+                .status(401)
+                .json({
+                    success: false,
+                    message:
+                        "You must be logged in."
+                });
 
         }
 
@@ -376,21 +605,28 @@ app.post("/api/account/spend", async (req, res) => {
 
 
         const amount =
-            Number(req.body.amount);
+            Number(
+                req.body.amount
+            );
 
 
         const marketId =
-            Number(req.body.marketId);
+            Number(
+                req.body.marketId
+            );
 
 
         const side =
             String(
-                req.body.side || ""
+                req.body.side ||
+                ""
             ).toUpperCase();
 
 
         const price =
-            Number(req.body.price);
+            Number(
+                req.body.price
+            );
 
 
         // Validate amount
@@ -399,23 +635,29 @@ app.post("/api/account/spend", async (req, res) => {
             amount <= 0
         ) {
 
-            return res.status(400).json({
-                success: false,
-                message:
-                    "Amount must be a positive whole number."
-            });
+            return res
+                .status(400)
+                .json({
+                    success: false,
+                    message:
+                        "Amount must be a positive whole number."
+                });
 
         }
 
 
         // Prevent unreasonable purchases
-        if (amount > 1000000) {
+        if (
+            amount > 1000000
+        ) {
 
-            return res.status(400).json({
-                success: false,
-                message:
-                    "Amount is too large."
-            });
+            return res
+                .status(400)
+                .json({
+                    success: false,
+                    message:
+                        "Amount is too large."
+                });
 
         }
 
@@ -426,11 +668,13 @@ app.post("/api/account/spend", async (req, res) => {
             marketId <= 0
         ) {
 
-            return res.status(400).json({
-                success: false,
-                message:
-                    "Invalid market."
-            });
+            return res
+                .status(400)
+                .json({
+                    success: false,
+                    message:
+                        "Invalid market."
+                });
 
         }
 
@@ -441,11 +685,13 @@ app.post("/api/account/spend", async (req, res) => {
             side !== "NO"
         ) {
 
-            return res.status(400).json({
-                success: false,
-                message:
-                    "Trade side must be YES or NO."
-            });
+            return res
+                .status(400)
+                .json({
+                    success: false,
+                    message:
+                        "Trade side must be YES or NO."
+                });
 
         }
 
@@ -457,84 +703,112 @@ app.post("/api/account/spend", async (req, res) => {
             price > 99
         ) {
 
-            return res.status(400).json({
-                success: false,
-                message:
-                    "Invalid market price."
-            });
+            return res
+                .status(400)
+                .json({
+                    success: false,
+                    message:
+                        "Invalid market price."
+                });
 
         }
 
 
         // Get PostgreSQL connection
-        client = await db.connect();
+        client =
+            await db.connect();
 
 
-        // Start transaction
-        await client.query("BEGIN");
-
-
-        // Deduct MC
-        const balanceResult = await client.query(
-            `
-            UPDATE users
-            SET balance = balance - $1
-            WHERE roblox_id = $2
-            AND balance >= $1
-            RETURNING balance
-            `,
-            [
-                amount,
-                robloxId
-            ]
+        // Begin transaction
+        await client.query(
+            "BEGIN"
         );
 
 
+        // Deduct MC
+        const balanceResult =
+            await client.query(
+                `
+                UPDATE users
+                SET balance =
+                    balance - $1
+
+                WHERE roblox_id = $2
+
+                AND balance >= $1
+
+                RETURNING balance
+                `,
+                [
+                    amount,
+                    robloxId
+                ]
+            );
+
+
         // Not enough MC
-        if (balanceResult.rows.length === 0) {
+        if (
+            balanceResult.rows.length === 0
+        ) {
 
-            await client.query("ROLLBACK");
+            await client.query(
+                "ROLLBACK"
+            );
 
-            return res.status(400).json({
-                success: false,
-                message:
-                    "Insufficient balance."
-            });
+
+            return res
+                .status(400)
+                .json({
+                    success: false,
+                    message:
+                        "Insufficient balance."
+                });
 
         }
 
 
-        // Save the trade
-        const tradeResult = await client.query(
-            `
-            INSERT INTO trades (
-                roblox_id,
-                market_id,
-                side,
-                amount,
-                price
-            )
-            VALUES ($1, $2, $3, $4, $5)
-            RETURNING
-                id,
-                market_id,
-                side,
-                amount,
-                price,
-                created_at
-            `,
-            [
-                robloxId,
-                marketId,
-                side,
-                amount,
-                price
-            ]
+        // Save trade
+        const tradeResult =
+            await client.query(
+                `
+                INSERT INTO trades (
+                    roblox_id,
+                    market_id,
+                    side,
+                    amount,
+                    price
+                )
+
+                VALUES (
+                    $1,
+                    $2,
+                    $3,
+                    $4,
+                    $5
+                )
+
+                RETURNING
+                    id,
+                    market_id,
+                    side,
+                    amount,
+                    price,
+                    created_at
+                `,
+                [
+                    robloxId,
+                    marketId,
+                    side,
+                    amount,
+                    price
+                ]
+            );
+
+
+        // Commit transaction
+        await client.query(
+            "COMMIT"
         );
-
-
-        // Commit both operations
-        await client.query("COMMIT");
 
 
         const trade =
@@ -546,10 +820,17 @@ app.post("/api/account/spend", async (req, res) => {
 
 
         res.json({
+
             success: true,
-            balance: newBalance,
-            trade: trade
+
+            balance:
+                newBalance,
+
+            trade:
+                trade
+
         });
+
 
     } catch (error) {
 
@@ -557,7 +838,9 @@ app.post("/api/account/spend", async (req, res) => {
 
             try {
 
-                await client.query("ROLLBACK");
+                await client.query(
+                    "ROLLBACK"
+                );
 
             } catch (rollbackError) {
 
@@ -567,6 +850,7 @@ app.post("/api/account/spend", async (req, res) => {
                 );
 
             }
+
         }
 
 
@@ -576,11 +860,14 @@ app.post("/api/account/spend", async (req, res) => {
         );
 
 
-        res.status(500).json({
-            success: false,
-            message:
-                "Failed to place trade."
-        });
+        res
+            .status(500)
+            .json({
+                success: false,
+                message:
+                    "Failed to place trade."
+            });
+
 
     } finally {
 
@@ -589,6 +876,7 @@ app.post("/api/account/spend", async (req, res) => {
         }
 
     }
+
 });
 
 
@@ -602,11 +890,13 @@ app.get("/auth/logout", (req, res) => {
 
         if (err) {
 
-            return res.status(500).json({
-                success: false,
-                message:
-                    "Logout failed."
-            });
+            return res
+                .status(500)
+                .json({
+                    success: false,
+                    message:
+                        "Logout failed."
+                });
 
         }
 
@@ -614,7 +904,9 @@ app.get("/auth/logout", (req, res) => {
         res.redirect(
             "https://kennethtube.github.io/metromarkets/"
         );
+
     });
+
 });
 
 
@@ -656,13 +948,17 @@ async function startServer() {
         );
 
 
-        app.listen(PORT, () => {
+        app.listen(
+            PORT,
+            () => {
 
-            console.log(
-                `MetroMarkets backend running on port ${PORT}`
-            );
+                console.log(
+                    `MetroMarkets backend running on port ${PORT}`
+                );
 
-        });
+            }
+        );
+
 
     } catch (error) {
 
@@ -672,6 +968,7 @@ async function startServer() {
         );
 
     }
+
 }
 
 
