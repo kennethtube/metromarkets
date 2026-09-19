@@ -126,45 +126,37 @@ function openModal(id) {
         return;
     }
 
-
     document.getElementById(
         "modalCategory"
     ).textContent =
         selected.category;
-
 
     document.getElementById(
         "modalTitle"
     ).textContent =
         selected.title;
 
-
     document.getElementById(
         "modalQuestion"
     ).textContent =
         selected.question;
-
 
     document.getElementById(
         "yesPrice"
     ).textContent =
         selected.yes + "¢";
 
-
     document.getElementById(
         "noPrice"
     ).textContent =
         (100 - selected.yes) + "¢";
 
-
     const amountInput =
         document.getElementById("tradeAmount");
-
 
     if (amountInput) {
         amountInput.value = "";
     }
-
 
     document
         .getElementById("tradeModal")
@@ -203,7 +195,10 @@ function getMarketById(id) {
 // FORMAT NUMBER
 // ================================
 
-function formatNumber(value, decimals = 2) {
+function formatNumber(
+    value,
+    decimals = 2
+) {
 
     const number =
         Number(value);
@@ -211,7 +206,6 @@ function formatNumber(value, decimals = 2) {
     if (!Number.isFinite(number)) {
         return "0";
     }
-
 
     return number.toLocaleString(
         undefined,
@@ -227,7 +221,7 @@ function formatNumber(value, decimals = 2) {
 
 
 // ================================
-// FORMAT TRADE TIME
+// FORMAT TIME
 // ================================
 
 function formatTradeTime(timestamp) {
@@ -236,10 +230,8 @@ function formatTradeTime(timestamp) {
         return "Unknown time";
     }
 
-
     const date =
         new Date(timestamp);
-
 
     if (
         Number.isNaN(
@@ -250,13 +242,12 @@ function formatTradeTime(timestamp) {
         return "Unknown time";
     }
 
-
     return date.toLocaleString();
 }
 
 
 // ================================
-// LOAD USER POSITIONS
+// LOAD POSITIONS
 // ================================
 
 async function loadPositions() {
@@ -266,11 +257,9 @@ async function loadPositions() {
             "portfolioText"
         );
 
-
     if (!portfolioText) {
         return;
     }
-
 
     try {
 
@@ -282,10 +271,8 @@ async function loadPositions() {
                 }
             );
 
-
         const data =
             await response.json();
-
 
         if (!response.ok) {
 
@@ -296,7 +283,6 @@ async function loadPositions() {
             return;
         }
 
-
         const positions =
             Array.isArray(
                 data.positions
@@ -304,19 +290,16 @@ async function loadPositions() {
                 ? data.positions
                 : [];
 
-
         const positionsElement =
             document.getElementById(
                 "positions"
             );
-
 
         if (positionsElement) {
 
             positionsElement.textContent =
                 positions.length;
         }
-
 
         if (positions.length === 0) {
 
@@ -337,7 +320,6 @@ async function loadPositions() {
             return;
         }
 
-
         portfolioText.innerHTML = `
 
             <div class="portfolio-positions">
@@ -357,7 +339,6 @@ async function loadPositions() {
 
                 </div>
 
-
                 <div class="position-list">
 
                     ${positions.map(position => {
@@ -367,18 +348,20 @@ async function loadPositions() {
                                 position.market_id
                             );
 
-
                         const marketName =
                             market
                                 ? market.title
                                 : `Market #${position.market_id}`;
-
 
                         const side =
                             String(
                                 position.side || ""
                             ).toUpperCase();
 
+                        const sideClass =
+                            side === "NO"
+                                ? "side-no"
+                                : "side-yes";
 
                         const currentPrice =
                             market
@@ -391,24 +374,20 @@ async function loadPositions() {
                                     position.average_price
                                 );
 
-
                         const shares =
                             Number(
                                 position.shares
                             );
-
 
                         const invested =
                             Number(
                                 position.total_invested
                             );
 
-
                         const averagePrice =
                             Number(
                                 position.average_price
                             );
-
 
                         const currentValue =
                             shares *
@@ -417,21 +396,12 @@ async function loadPositions() {
                                 100
                             );
 
-
                         const potentialPayout =
                             shares;
-
 
                         const unrealizedValue =
                             currentValue -
                             invested;
-
-
-                        const sideClass =
-                            side === "NO"
-                                ? "no"
-                                : "yes";
-
 
                         return `
 
@@ -441,7 +411,7 @@ async function loadPositions() {
 
                                     <div>
 
-                                        <span class="category ${sideClass}">
+                                        <span class="position-side ${sideClass}">
                                             ${side}
                                         </span>
 
@@ -457,7 +427,6 @@ async function loadPositions() {
 
                                 </div>
 
-
                                 <div class="position-stats">
 
                                     <div>
@@ -466,10 +435,12 @@ async function loadPositions() {
                                         </span>
 
                                         <strong>
-                                            ${formatNumber(invested, 0)} MC
+                                            ${formatNumber(
+                                                invested,
+                                                0
+                                            )} MC
                                         </strong>
                                     </div>
-
 
                                     <div>
                                         <span>
@@ -477,10 +448,12 @@ async function loadPositions() {
                                         </span>
 
                                         <strong>
-                                            ${formatNumber(shares, 2)}
+                                            ${formatNumber(
+                                                shares,
+                                                2
+                                            )}
                                         </strong>
                                     </div>
-
 
                                     <div>
                                         <span>
@@ -488,10 +461,12 @@ async function loadPositions() {
                                         </span>
 
                                         <strong>
-                                            ${formatNumber(averagePrice, 2)}¢
+                                            ${formatNumber(
+                                                averagePrice,
+                                                2
+                                            )}¢
                                         </strong>
                                     </div>
-
 
                                     <div>
                                         <span>
@@ -499,10 +474,12 @@ async function loadPositions() {
                                         </span>
 
                                         <strong>
-                                            ${formatNumber(currentValue, 2)} MC
+                                            ${formatNumber(
+                                                currentValue,
+                                                2
+                                            )} MC
                                         </strong>
                                     </div>
-
 
                                     <div>
                                         <span>
@@ -510,19 +487,31 @@ async function loadPositions() {
                                         </span>
 
                                         <strong>
-                                            ${formatNumber(potentialPayout, 2)} MC
+                                            ${formatNumber(
+                                                potentialPayout,
+                                                2
+                                            )} MC
                                         </strong>
                                     </div>
-
 
                                     <div>
                                         <span>
                                             Unrealized
                                         </span>
 
-                                        <strong class="${unrealizedValue < 0 ? "negative" : "positive"}">
-                                            ${unrealizedValue >= 0 ? "+" : ""}
-                                            ${formatNumber(unrealizedValue, 2)} MC
+                                        <strong class="${
+                                            unrealizedValue < 0
+                                                ? "negative"
+                                                : "positive"
+                                        }">
+                                            ${
+                                                unrealizedValue >= 0
+                                                    ? "+"
+                                                    : ""
+                                            }${formatNumber(
+                                                unrealizedValue,
+                                                2
+                                            )} MC
                                         </strong>
                                     </div>
 
@@ -539,14 +528,12 @@ async function loadPositions() {
             </div>
         `;
 
-
     } catch (error) {
 
         console.error(
             "Load positions failed:",
             error
         );
-
 
         portfolioText.textContent =
             "Could not connect to the trading server.";
@@ -570,15 +557,12 @@ async function loadTradeHistory() {
                 }
             );
 
-
         const data =
             await response.json();
-
 
         if (!response.ok) {
             return;
         }
-
 
         const trades =
             Array.isArray(
@@ -587,12 +571,10 @@ async function loadTradeHistory() {
                 ? data.trades
                 : [];
 
-
         const portfolioText =
             document.getElementById(
                 "portfolioText"
             );
-
 
         if (
             !portfolioText ||
@@ -600,7 +582,6 @@ async function loadTradeHistory() {
         ) {
             return;
         }
-
 
         const historyHTML = `
 
@@ -621,7 +602,6 @@ async function loadTradeHistory() {
 
                 </div>
 
-
                 <div class="trade-history-list">
 
                     ${trades.map(trade => {
@@ -631,24 +611,20 @@ async function loadTradeHistory() {
                                 trade.market_id
                             );
 
-
                         const marketName =
                             market
                                 ? market.title
                                 : `Market #${trade.market_id}`;
-
 
                         const side =
                             String(
                                 trade.side || ""
                             ).toUpperCase();
 
-
                         const sideClass =
                             side === "NO"
-                                ? "no"
-                                : "yes";
-
+                                ? "side-no"
+                                : "side-yes";
 
                         return `
 
@@ -666,11 +642,12 @@ async function loadTradeHistory() {
 
                                 </div>
 
-
                                 <div class="trade-history-details">
 
                                     <span>
-                                        ${Number(trade.amount).toLocaleString()} MC
+                                        ${Number(
+                                            trade.amount
+                                        ).toLocaleString()} MC
                                     </span>
 
                                     <span>
@@ -679,13 +656,10 @@ async function loadTradeHistory() {
 
                                 </div>
 
-
                                 <div class="trade-history-time">
-
                                     ${formatTradeTime(
                                         trade.created_at
                                     )}
-
                                 </div>
 
                             </div>
@@ -699,10 +673,8 @@ async function loadTradeHistory() {
             </div>
         `;
 
-
         portfolioText.innerHTML +=
             historyHTML;
-
 
     } catch (error) {
 
@@ -725,7 +697,6 @@ async function placeTrade(side) {
             "tradeAmount"
         );
 
-
     if (!amountInput) {
 
         alert(
@@ -734,7 +705,6 @@ async function placeTrade(side) {
 
         return;
     }
-
 
     if (!selected) {
 
@@ -745,12 +715,10 @@ async function placeTrade(side) {
         return;
     }
 
-
     const amount =
         Number(
             amountInput.value
         );
-
 
     if (
         !Number.isInteger(amount) ||
@@ -764,9 +732,7 @@ async function placeTrade(side) {
         return;
     }
 
-
     let price;
-
 
     if (side === "YES") {
 
@@ -786,7 +752,6 @@ async function placeTrade(side) {
 
         return;
     }
-
 
     try {
 
@@ -821,10 +786,8 @@ async function placeTrade(side) {
                 }
             );
 
-
         const data =
             await response.json();
-
 
         if (!response.ok) {
 
@@ -836,7 +799,6 @@ async function placeTrade(side) {
             return;
         }
 
-
         document.getElementById(
             "balance"
         ).textContent =
@@ -846,23 +808,17 @@ async function placeTrade(side) {
             .toLocaleString() +
             " MC";
 
-
         amountInput.value = "";
-
 
         closeModal();
 
-
         await loadPositions();
 
-
         await loadTradeHistory();
-
 
         alert(
             `Bought ${side} for ${amount.toLocaleString()} MC at ${price}¢.`
         );
-
 
     } catch (error) {
 
@@ -870,7 +826,6 @@ async function placeTrade(side) {
             "Trade failed:",
             error
         );
-
 
         alert(
             "Could not connect to the trading server."
@@ -906,22 +861,18 @@ async function checkLogin() {
                 }
             );
 
-
         const data =
             await response.json();
-
 
         const loginButton =
             document.getElementById(
                 "loginBtn"
             );
 
-
         if (data.loggedIn) {
 
             const username =
                 `Roblox ID: ${data.user.sub}`;
-
 
             document.getElementById(
                 "balance"
@@ -932,19 +883,16 @@ async function checkLogin() {
                 .toLocaleString() +
                 " MC";
 
-
             document.getElementById(
                 "account"
             ).textContent =
                 username;
-
 
             loginButton.textContent =
                 "Logout";
 
             loginButton.disabled =
                 false;
-
 
             loginButton.onclick = () => {
 
@@ -953,12 +901,9 @@ async function checkLogin() {
 
             };
 
-
             await loadPositions();
 
-
             await loadTradeHistory();
-
 
         } else {
 
@@ -971,18 +916,15 @@ async function checkLogin() {
             loginButton.onclick =
                 login;
 
-
             document.getElementById(
                 "account"
             ).textContent =
                 "Guest";
 
-
             document.getElementById(
                 "positions"
             ).textContent =
                 "0";
-
 
             document.getElementById(
                 "portfolioText"
@@ -990,7 +932,6 @@ async function checkLogin() {
                 "Log in with Roblox to view your portfolio and place trades.";
 
         }
-
 
     } catch (error) {
 

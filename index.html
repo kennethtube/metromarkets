@@ -2,10 +2,21 @@
 <html lang="en">
 
 <head>
+
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1"
+    >
+
     <title>MetroMarkets</title>
-    <link rel="stylesheet" href="styles.css">
+
+    <link
+        rel="stylesheet"
+        href="styles.css?v=5"
+    >
+
 </head>
 
 <body>
@@ -17,18 +28,26 @@
     </div>
 
     <nav>
-        <a href="#markets">Markets</a>
-        <a href="#portfolio">Portfolio</a>
+
+        <a href="#markets">
+            Markets
+        </a>
+
+        <a href="#portfolio">
+            Portfolio
+        </a>
 
         <button id="loginBtn">
             Login with Roblox
         </button>
+
     </nav>
 
 </header>
 
 
 <main>
+
 
     <!-- HERO -->
 
@@ -71,13 +90,27 @@
             </h2>
 
             <div class="mini-row">
-                <span>Open positions</span>
-                <strong id="positions">0</strong>
+
+                <span>
+                    Open positions
+                </span>
+
+                <strong id="positions">
+                    0
+                </strong>
+
             </div>
 
             <div class="mini-row">
-                <span>Account</span>
-                <strong id="account">Guest</strong>
+
+                <span>
+                    Account
+                </span>
+
+                <strong id="account">
+                    Guest
+                </strong>
+
             </div>
 
         </div>
@@ -147,16 +180,13 @@
 
         <div class="panel portfolio-panel">
 
-            <!--
-                This must be a DIV rather than a P because
-                JavaScript inserts position and trade cards here.
-            -->
-
             <div
                 id="portfolioText"
                 class="portfolio-content"
             >
+
                 Log in with Roblox to view your portfolio and place trades.
+
             </div>
 
         </div>
@@ -218,8 +248,11 @@
                 class="yes"
                 onclick="placeTrade('YES')"
             >
+
                 Buy YES
+
                 <span id="yesPrice"></span>
+
             </button>
 
 
@@ -227,8 +260,11 @@
                 class="no"
                 onclick="placeTrade('NO')"
             >
+
                 Buy NO
+
                 <span id="noPrice"></span>
+
             </button>
 
         </div>
@@ -243,7 +279,7 @@
 </div>
 
 
-<script src="app.js?v=4"></script>
+<script src="app.js?v=5"></script>
 
 </body>
 
