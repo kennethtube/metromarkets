@@ -5,18 +5,29 @@ const crypto = require("crypto");
 const session = require("express-session");
 require("dotenv").config();
 
+const { Pool } = require("pg");
+
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// PostgreSQL connection
+const db = new Pool({
+    connectionString: process.env.DATABASE_URL
+});
+
+// CORS
 app.use(cors({
     origin: true,
     credentials: true
 }));
 
+// Trust Render's proxy
 app.set("trust proxy", 1);
 
+// JSON
 app.use(express.json());
 
+// Sessions
 app.use(session({
     secret: process.env.SESSION_SECRET,
     resave: false,
@@ -28,9 +39,10 @@ app.use(session({
     }
 }));
 
-// -------------------------
-// Basic routes
-// -------------------------
+
+// ================================
+// BASIC ROUTES
+// ================================
 
 app.get("/", (req, res) => {
     res.json({
@@ -45,11 +57,13 @@ app.get("/api/test", (req, res) => {
     });
 });
 
-// -------------------------
-// Roblox OAuth
-// -------------------------
+
+// ================================
+// ROBLOX LOGIN
+// ================================
 
 app.get("/auth/roblox", (req, res) => {
+
     const state = crypto.randomBytes(32).toString("hex");
 
     const codeVerifier = crypto
@@ -79,30 +93,42 @@ app.get("/auth/roblox", (req, res) => {
     );
 });
 
-// -------------------------
-// Roblox OAuth callback
-// -------------------------
+
+// ================================
+// ROBLOX OAUTH CALLBACK
+// ================================
 
 app.get("/auth/roblox/callback", async (req, res) => {
+
     try {
+
         const { code, state } = req.query;
 
         if (!code || !state) {
-            return res.status(400).send("Missing OAuth code or state.");
+            return res
+                .status(400)
+                .send("Missing OAuth code or state.");
         }
 
         if (state !== req.session.oauthState) {
-            return res.status(400).send("Invalid OAuth state.");
+            return res
+                .status(400)
+                .send("Invalid OAuth state.");
         }
 
         const codeVerifier = req.session.codeVerifier;
 
         if (!codeVerifier) {
-            return res.status(400).send("Missing PKCE code verifier.");
+            return res
+                .status(400)
+                .send("Missing PKCE code verifier.");
         }
 
+
+        // Exchange authorization code for access token
         const tokenResponse = await axios.post(
             "https://apis.roblox.com/oauth/v1/token",
+
             new URLSearchParams({
                 client_id: process.env.ROBLOX_CLIENT_ID,
                 client_secret: process.env.ROBLOX_CLIENT_SECRET,
@@ -110,15 +136,21 @@ app.get("/auth/roblox/callback", async (req, res) => {
                 code: code,
                 code_verifier: codeVerifier
             }).toString(),
+
             {
                 headers: {
-                    "Content-Type": "application/x-www-form-urlencoded"
+                    "Content-Type":
+                        "application/x-www-form-urlencoded"
                 }
             }
         );
 
-        const accessToken = tokenResponse.data.access_token;
 
+        const accessToken =
+            tokenResponse.data.access_token;
+
+
+        // Get Roblox user information
         const userResponse = await axios.get(
             "https://apis.roblox.com/oauth/v1/userinfo",
             {
@@ -127,59 +159,188 @@ app.get("/auth/roblox/callback", async (req, res) => {
                 }
             }
         );
-        console.log("Roblox user data:", userResponse.data);
-        req.session.user = userResponse.data;
 
+
+        const robloxUser = userResponse.data;
+
+        console.log("Roblox login successful:", robloxUser.sub);
+
+
+        // Store Roblox user in the session
+        req.session.user = robloxUser;
+
+
+        // Create the MetroMarkets account if it doesn't exist
+        await db.query(
+            `
+            INSERT INTO users (roblox_id)
+            VALUES ($1)
+            ON CONFLICT (roblox_id)
+            DO NOTHING
+            `,
+            [robloxUser.sub]
+        );
+
+
+        // Remove OAuth information from session
         delete req.session.oauthState;
         delete req.session.codeVerifier;
 
+
+        // Return to MetroMarkets
         res.redirect(
             "https://kennethtube.github.io/metromarkets/"
         );
 
     } catch (error) {
+
         console.error(
             "Roblox OAuth error:",
             error.response?.data || error.message
         );
 
-        res.status(500).send("Roblox login failed.");
+        res
+            .status(500)
+            .send("Roblox login failed.");
     }
 });
 
-// -------------------------
-// Current logged-in user
-// -------------------------
 
-app.get("/api/me", (req, res) => {
-    if (!req.session.user) {
-        return res.json({
-            loggedIn: false
+// ================================
+// CURRENT USER
+// ================================
+
+app.get("/api/me", async (req, res) => {
+
+    try {
+
+        if (!req.session.user) {
+
+            return res.json({
+                loggedIn: false
+            });
+
+        }
+
+
+        const robloxId = req.session.user.sub;
+
+
+        const result = await db.query(
+            `
+            SELECT
+                roblox_id,
+                balance,
+                created_at
+            FROM users
+            WHERE roblox_id = $1
+            `,
+            [robloxId]
+        );
+
+
+        if (result.rows.length === 0) {
+
+            return res.status(404).json({
+                loggedIn: false,
+                message: "Account not found."
+            });
+
+        }
+
+
+        const account = result.rows[0];
+
+
+        res.json({
+            loggedIn: true,
+
+            user: {
+                sub: account.roblox_id
+            },
+
+            balance: account.balance,
+
+            createdAt: account.created_at
+        });
+
+    } catch (error) {
+
+        console.error(
+            "Database error:",
+            error.message
+        );
+
+        res.status(500).json({
+            success: false,
+            message: "Failed to load account."
         });
     }
-
-    res.json({
-        loggedIn: true,
-        user: req.session.user
-    });
 });
 
+
+// ================================
+// LOGOUT
+// ================================
+
 app.get("/auth/logout", (req, res) => {
+
     req.session.destroy((err) => {
+
         if (err) {
+
             return res.status(500).json({
                 success: false,
                 message: "Logout failed."
             });
+
         }
 
-        res.redirect("https://kennethtube.github.io/metromarkets/");
+        res.redirect(
+            "https://kennethtube.github.io/metromarkets/"
+        );
     });
 });
-// -------------------------
-// Start server
-// -------------------------
 
-app.listen(PORT, () => {
-    console.log(`MetroMarkets backend running on port ${PORT}`);
-});
+
+// ================================
+// DATABASE + SERVER STARTUP
+// ================================
+
+async function startServer() {
+
+    try {
+
+        await db.query(`
+            CREATE TABLE IF NOT EXISTS users (
+                id SERIAL PRIMARY KEY,
+                roblox_id TEXT UNIQUE NOT NULL,
+                balance BIGINT NOT NULL DEFAULT 10000,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        `);
+
+        console.log(
+            "Database connected and users table ready."
+        );
+
+
+        app.listen(PORT, () => {
+
+            console.log(
+                `MetroMarkets backend running on port ${PORT}`
+            );
+
+        });
+
+    } catch (error) {
+
+        console.error(
+            "Database connection failed:",
+            error
+        );
+
+    }
+}
+
+startServer();
