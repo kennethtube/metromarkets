@@ -127,7 +127,7 @@ app.get("/auth/roblox/callback", async (req, res) => {
                 }
             }
         );
-
+        console.log("Roblox user data:", userResponse.data);
         req.session.user = userResponse.data;
 
         delete req.session.oauthState;
