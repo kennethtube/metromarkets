@@ -2,285 +2,192 @@
 <html lang="en">
 
 <head>
-
-    <meta charset="UTF-8">
-
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1"
-    >
-
-    <title>MetroMarkets</title>
-
-    <link
-        rel="stylesheet"
-        href="styles.css?v=5"
-    >
-
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MetroMarkets</title>
+<link rel="stylesheet" href="styles.css?v=6">
 </head>
 
 <body>
 
 <header>
 
-    <div class="brand">
-        METRO<span>MARKETS</span>
-    </div>
+<div class="brand">
+METRO<span>MARKETS</span>
+</div>
 
-    <nav>
-
-        <a href="#markets">
-            Markets
-        </a>
-
-        <a href="#portfolio">
-            Portfolio
-        </a>
-
-        <button id="loginBtn">
-            Login with Roblox
-        </button>
-
-    </nav>
+<nav>
+<a href="#markets">Markets</a>
+<a href="#portfolio">Portfolio</a>
+<button id="loginBtn">Login with Roblox</button>
+</nav>
 
 </header>
 
-
 <main>
 
+<section class="hero">
 
-    <!-- HERO -->
+<div>
 
-    <section class="hero">
+<p class="eyebrow">
+VIRTUAL PREDICTION EXCHANGE
+</p>
 
-        <div>
+<h1>
+Trade the<br>
+<em>future</em>
+</h1>
 
-            <p class="eyebrow">
-                VIRTUAL PREDICTION EXCHANGE
-            </p>
+<p class="sub">
+Use virtual credits to forecast events,
+track your positions, and see what the community expects next.
+</p>
 
-            <h1>
-                Trade the<br>
-                <em>future</em>
-            </h1>
+<button
+class="primary"
+onclick="document.querySelector('#markets').scrollIntoView({behavior:'smooth'})"
+>
+Explore markets ↓
+</button>
 
-            <p class="sub">
-                Use virtual credits to forecast events,
-                track your positions, and see what the community expects next.
-            </p>
+</div>
 
-            <button
-                class="primary"
-                onclick="document.querySelector('#markets').scrollIntoView({behavior:'smooth'})"
-            >
-                Explore markets ↓
-            </button>
+<div class="hero-card">
 
-        </div>
+<p>
+YOUR VIRTUAL BALANCE
+</p>
 
+<h2 id="balance">
+10,000 MC
+</h2>
 
-        <div class="hero-card">
+<div class="mini-row">
+<span>Open positions</span>
+<strong id="positions">0</strong>
+</div>
 
-            <p>
-                YOUR VIRTUAL BALANCE
-            </p>
+<div class="mini-row">
+<span>Account</span>
+<strong id="account">Guest</strong>
+</div>
 
-            <h2 id="balance">
-                10,000 MC
-            </h2>
+</div>
 
-            <div class="mini-row">
-
-                <span>
-                    Open positions
-                </span>
-
-                <strong id="positions">
-                    0
-                </strong>
-
-            </div>
-
-            <div class="mini-row">
-
-                <span>
-                    Account
-                </span>
-
-                <strong id="account">
-                    Guest
-                </strong>
-
-            </div>
-
-        </div>
-
-    </section>
+</section>
 
 
-    <!-- MARKETS -->
+<section id="markets" class="section">
 
-    <section
-        id="markets"
-        class="section"
-    >
+<div class="section-head">
 
-        <div class="section-head">
+<div>
 
-            <div>
+<p class="eyebrow">
+LIVE BOARD
+</p>
 
-                <p class="eyebrow">
-                    LIVE BOARD
-                </p>
+<h2>
+Open markets
+</h2>
 
-                <h2>
-                    Open markets
-                </h2>
+</div>
 
-            </div>
+<span class="pill">
+● Demo data
+</span>
 
-            <span class="pill">
-                ● Demo data
-            </span>
+</div>
 
-        </div>
+<div id="marketGrid" class="grid"></div>
 
-
-        <div
-            id="marketGrid"
-            class="grid"
-        ></div>
-
-    </section>
+</section>
 
 
-    <!-- PORTFOLIO -->
+<section id="portfolio" class="section portfolio">
 
-    <section
-        id="portfolio"
-        class="section portfolio"
-    >
+<div class="section-head">
 
-        <div class="section-head">
+<div>
 
-            <div>
+<p class="eyebrow">
+YOUR ACTIVITY
+</p>
 
-                <p class="eyebrow">
-                    YOUR ACTIVITY
-                </p>
+<h2>
+Portfolio
+</h2>
 
-                <h2>
-                    Portfolio
-                </h2>
+</div>
 
-            </div>
+</div>
 
-        </div>
+<div class="panel portfolio-panel">
 
+<div id="portfolioText" class="portfolio-content">
+Log in with Roblox to view your portfolio and place trades.
+</div>
 
-        <div class="panel portfolio-panel">
+</div>
 
-            <div
-                id="portfolioText"
-                class="portfolio-content"
-            >
-
-                Log in with Roblox to view your portfolio and place trades.
-
-            </div>
-
-        </div>
-
-    </section>
+</section>
 
 </main>
 
 
-<!-- TRADE MODAL -->
+<div id="tradeModal" class="modal hidden">
 
-<div
-    id="tradeModal"
-    class="modal hidden"
+<div class="modal-box">
+
+<button class="close" onclick="closeModal()">×</button>
+
+<p class="eyebrow" id="modalCategory"></p>
+
+<h2 id="modalTitle"></h2>
+
+<p id="modalQuestion"></p>
+
+<div class="trade-amount">
+
+<label for="tradeAmount">
+Amount to spend
+</label>
+
+<input
+type="number"
+id="tradeAmount"
+min="1"
+step="1"
+placeholder="Enter MC amount"
 >
 
-    <div class="modal-box">
+</div>
 
-        <button
-            class="close"
-            onclick="closeModal()"
-        >
-            ×
-        </button>
+<div class="trade-options">
 
+<button class="yes" onclick="placeTrade('YES')">
+Buy YES
+<span id="yesPrice"></span>
+</button>
 
-        <p
-            class="eyebrow"
-            id="modalCategory"
-        ></p>
+<button class="no" onclick="placeTrade('NO')">
+Buy NO
+<span id="noPrice"></span>
+</button>
 
+</div>
 
-        <h2 id="modalTitle"></h2>
+<p class="fine">
+Trades use your virtual MC balance.
+</p>
 
-
-        <p id="modalQuestion"></p>
-
-
-        <div class="trade-amount">
-
-            <label for="tradeAmount">
-                Amount to spend
-            </label>
-
-            <input
-                type="number"
-                id="tradeAmount"
-                min="1"
-                step="1"
-                placeholder="Enter MC amount"
-            >
-
-        </div>
-
-
-        <div class="trade-options">
-
-            <button
-                class="yes"
-                onclick="placeTrade('YES')"
-            >
-
-                Buy YES
-
-                <span id="yesPrice"></span>
-
-            </button>
-
-
-            <button
-                class="no"
-                onclick="placeTrade('NO')"
-            >
-
-                Buy NO
-
-                <span id="noPrice"></span>
-
-            </button>
-
-        </div>
-
-
-        <p class="fine">
-            Trades use your virtual MC balance.
-        </p>
-
-    </div>
+</div>
 
 </div>
 
 
-<script src="app.js?v=5"></script>
+<script src="app.js?v=6"></script>
 
 </body>
-
 </html>
