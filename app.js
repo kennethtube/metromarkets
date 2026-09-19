@@ -76,6 +76,7 @@ function render() {
 
             <div class="market-footer">
                 <span>${m.volume} • closes ${m.close}</span>
+
                 <button class="trade" onclick="openModal(${m.id})">
                     Trade →
                 </button>
@@ -115,9 +116,9 @@ function placeTrade(side) {
     );
 }
 
-document.getElementById("loginBtn").onclick = () => {
+function login() {
     window.location.href = `${API_URL}/auth/roblox`;
-};
+}
 
 async function checkLogin() {
     try {
@@ -127,22 +128,29 @@ async function checkLogin() {
 
         const data = await response.json();
 
+        const loginButton = document.getElementById("loginBtn");
+
         if (data.loggedIn) {
-            const username =
-                `Roblox ID: ${data.user.sub}`;
+            const username = `Roblox ID: ${data.user.sub}`;
 
             document.getElementById("account").textContent =
                 username;
 
-            const loginButton =
-                document.getElementById("loginBtn");
+            loginButton.textContent = "Logout";
+            loginButton.disabled = false;
 
-            loginButton.textContent = "Logged in";
-            loginButton.disabled = true;
+            loginButton.onclick = () => {
+                window.location.href = `${API_URL}/auth/logout`;
+            };
 
             document.getElementById("portfolioText").textContent =
                 `Logged in as ${username}. Your portfolio will appear here.`;
+        } else {
+            loginButton.textContent = "Login with Roblox";
+            loginButton.disabled = false;
+            loginButton.onclick = login;
         }
+
     } catch (error) {
         console.error("Login check failed:", error);
     }
