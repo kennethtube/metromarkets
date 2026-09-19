@@ -17,3 +17,10 @@ app.get("/", (req, res) => {
 app.listen(PORT, () => {
     console.log(`MetroMarkets backend running on port ${PORT}`);
 });
+
+app.get("/api/test", (req, res) => {
+    res.json({
+        success: true,
+        message: "Frontend successfully connected to the MetroMarkets backend!"
+    });
+});
