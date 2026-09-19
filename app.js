@@ -142,6 +142,16 @@ function openModal(id) {
         "noPrice"
     ).textContent = (100 - selected.yes) + "¢";
 
+
+    // Clear previous amount
+    const amountInput =
+        document.getElementById("tradeAmount");
+
+    if (amountInput) {
+        amountInput.value = "";
+    }
+
+
     document
         .getElementById("tradeModal")
         .classList
@@ -182,6 +192,16 @@ async function placeTrade(side) {
     }
 
 
+    if (!selected) {
+
+        alert(
+            "No market is currently selected."
+        );
+
+        return;
+    }
+
+
     const amount =
         Number(amountInput.value);
 
@@ -193,6 +213,23 @@ async function placeTrade(side) {
 
         alert(
             "Enter a valid whole-number amount."
+        );
+
+        return;
+    }
+
+
+    // Determine the price
+    let price;
+
+    if (side === "YES") {
+        price = selected.yes;
+    } else if (side === "NO") {
+        price = 100 - selected.yes;
+    } else {
+
+        alert(
+            "Invalid trade side."
         );
 
         return;
@@ -214,7 +251,10 @@ async function placeTrade(side) {
                 },
 
                 body: JSON.stringify({
-                    amount: amount
+                    marketId: selected.id,
+                    side: side,
+                    amount: amount,
+                    price: price
                 })
             }
         );
@@ -244,9 +284,37 @@ async function placeTrade(side) {
             " MC";
 
 
+        // Increase open positions display
+        const positionsElement =
+            document.getElementById("positions");
+
+        if (positionsElement) {
+
+            const currentPositions =
+                Number(
+                    positionsElement.textContent
+                ) || 0;
+
+            positionsElement.textContent =
+                currentPositions + 1;
+        }
+
+
+        // Clear amount
+        amountInput.value = "";
+
+
+        // Close the modal
+        closeModal();
+
+
         alert(
-            `Bought ${side} with ${amount.toLocaleString()} MC.`
+            `Bought ${side} for ${amount.toLocaleString()} MC at ${price}¢.`
         );
+
+
+        // Refresh account information
+        await checkLogin();
 
 
     } catch (error) {
@@ -255,6 +323,7 @@ async function placeTrade(side) {
             "Trade failed:",
             error
         );
+
 
         alert(
             "Could not connect to the trading server."
@@ -365,6 +434,11 @@ async function checkLogin() {
 
             loginButton.onclick =
                 login;
+
+            document.getElementById(
+                "account"
+            ).textContent =
+                "Guest";
 
         }
 
