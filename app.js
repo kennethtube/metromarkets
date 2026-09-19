@@ -129,7 +129,7 @@ async function checkLogin() {
 
         if (data.loggedIn) {
             const username =
-                data.user.preferred_username || "Roblox User";
+                `Roblox ID: ${data.user.sub}`;
 
             document.getElementById("account").textContent =
                 username;
