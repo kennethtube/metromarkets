@@ -66,7 +66,8 @@ let selected = null;
 
 function render() {
 
-    const marketGrid = document.getElementById("marketGrid");
+    const marketGrid =
+        document.getElementById("marketGrid");
 
     marketGrid.innerHTML = markets.map(m => `
         <article class="market-card">
@@ -113,26 +114,33 @@ function render() {
 
 function openModal(id) {
 
-    selected = markets.find(m => m.id === id);
+    selected = markets.find(
+        m => m.id === id
+    );
 
     if (!selected) {
         return;
     }
 
-    document.getElementById("modalCategory").textContent =
-        selected.category;
+    document.getElementById(
+        "modalCategory"
+    ).textContent = selected.category;
 
-    document.getElementById("modalTitle").textContent =
-        selected.title;
+    document.getElementById(
+        "modalTitle"
+    ).textContent = selected.title;
 
-    document.getElementById("modalQuestion").textContent =
-        selected.question;
+    document.getElementById(
+        "modalQuestion"
+    ).textContent = selected.question;
 
-    document.getElementById("yesPrice").textContent =
-        selected.yes + "¢";
+    document.getElementById(
+        "yesPrice"
+    ).textContent = selected.yes + "¢";
 
-    document.getElementById("noPrice").textContent =
-        (100 - selected.yes) + "¢";
+    document.getElementById(
+        "noPrice"
+    ).textContent = (100 - selected.yes) + "¢";
 
     document
         .getElementById("tradeModal")
@@ -155,14 +163,103 @@ function closeModal() {
 
 
 // ================================
-// DEMO TRADE
+// PLACE TRADE
 // ================================
 
-function placeTrade(side) {
+async function placeTrade(side) {
 
-    alert(
-        `Demo action: Buy ${side}. Connect the trading backend before enabling real account balances or persistent trades.`
-    );
+    const amountInput =
+        document.getElementById("tradeAmount");
+
+
+    if (!amountInput) {
+
+        alert(
+            "Trade amount input was not found."
+        );
+
+        return;
+    }
+
+
+    const amount =
+        Number(amountInput.value);
+
+
+    if (
+        !Number.isInteger(amount) ||
+        amount <= 0
+    ) {
+
+        alert(
+            "Enter a valid whole-number amount."
+        );
+
+        return;
+    }
+
+
+    try {
+
+        const response = await fetch(
+            `${API_URL}/api/account/spend`,
+            {
+                method: "POST",
+
+                credentials: "include",
+
+                headers: {
+                    "Content-Type":
+                        "application/json"
+                },
+
+                body: JSON.stringify({
+                    amount: amount
+                })
+            }
+        );
+
+
+        const data =
+            await response.json();
+
+
+        if (!response.ok) {
+
+            alert(
+                data.message ||
+                "Trade failed."
+            );
+
+            return;
+        }
+
+
+        // Update displayed balance
+        document.getElementById(
+            "balance"
+        ).textContent =
+            Number(data.balance)
+                .toLocaleString() +
+            " MC";
+
+
+        alert(
+            `Bought ${side} with ${amount.toLocaleString()} MC.`
+        );
+
+
+    } catch (error) {
+
+        console.error(
+            "Trade failed:",
+            error
+        );
+
+        alert(
+            "Could not connect to the trading server."
+        );
+    }
 }
 
 
@@ -192,10 +289,15 @@ async function checkLogin() {
             }
         );
 
-        const data = await response.json();
+
+        const data =
+            await response.json();
+
 
         const loginButton =
-            document.getElementById("loginBtn");
+            document.getElementById(
+                "loginBtn"
+            );
 
 
         // ============================
@@ -209,12 +311,18 @@ async function checkLogin() {
 
 
             // Load balance from PostgreSQL
-            document.getElementById("balance").textContent =
-                Number(data.balance).toLocaleString() + " MC";
+            document.getElementById(
+                "balance"
+            ).textContent =
+                Number(data.balance)
+                    .toLocaleString() +
+                " MC";
 
 
             // Account information
-            document.getElementById("account").textContent =
+            document.getElementById(
+                "account"
+            ).textContent =
                 username;
 
 
@@ -222,7 +330,8 @@ async function checkLogin() {
             loginButton.textContent =
                 "Logout";
 
-            loginButton.disabled = false;
+            loginButton.disabled =
+                false;
 
 
             loginButton.onclick = () => {
@@ -234,7 +343,9 @@ async function checkLogin() {
 
 
             // Portfolio information
-            document.getElementById("portfolioText").textContent =
+            document.getElementById(
+                "portfolioText"
+            ).textContent =
                 `Logged in as ${username}. Your portfolio will appear here.`;
 
         }
@@ -249,11 +360,14 @@ async function checkLogin() {
             loginButton.textContent =
                 "Login with Roblox";
 
-            loginButton.disabled = false;
+            loginButton.disabled =
+                false;
 
-            loginButton.onclick = login;
+            loginButton.onclick =
+                login;
 
         }
+
 
     } catch (error) {
 
@@ -261,7 +375,6 @@ async function checkLogin() {
             "Login check failed:",
             error
         );
-
     }
 }
 
