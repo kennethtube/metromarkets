@@ -10,24 +10,29 @@ const { Pool } = require("pg");
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// PostgreSQL connection
+
+// ================================
+// POSTGRESQL
+// ================================
+
 const db = new Pool({
     connectionString: process.env.DATABASE_URL
 });
 
-// CORS
+
+// ================================
+// MIDDLEWARE
+// ================================
+
 app.use(cors({
     origin: true,
     credentials: true
 }));
 
-// Trust Render's proxy
 app.set("trust proxy", 1);
 
-// JSON
 app.use(express.json());
 
-// Sessions
 app.use(session({
     secret: process.env.SESSION_SECRET,
     resave: false,
@@ -49,6 +54,7 @@ app.get("/", (req, res) => {
         message: "MetroMarkets backend is running!"
     });
 });
+
 
 app.get("/api/test", (req, res) => {
     res.json({
@@ -125,7 +131,6 @@ app.get("/auth/roblox/callback", async (req, res) => {
         }
 
 
-        // Exchange authorization code for access token
         const tokenResponse = await axios.post(
             "https://apis.roblox.com/oauth/v1/token",
 
@@ -150,7 +155,6 @@ app.get("/auth/roblox/callback", async (req, res) => {
             tokenResponse.data.access_token;
 
 
-        // Get Roblox user information
         const userResponse = await axios.get(
             "https://apis.roblox.com/oauth/v1/userinfo",
             {
@@ -163,14 +167,16 @@ app.get("/auth/roblox/callback", async (req, res) => {
 
         const robloxUser = userResponse.data;
 
-        console.log("Roblox login successful:", robloxUser.sub);
+        console.log(
+            "Roblox login successful:",
+            robloxUser.sub
+        );
 
 
-        // Store Roblox user in the session
         req.session.user = robloxUser;
 
 
-        // Create the MetroMarkets account if it doesn't exist
+        // Create account if it doesn't already exist
         await db.query(
             `
             INSERT INTO users (roblox_id)
@@ -182,12 +188,10 @@ app.get("/auth/roblox/callback", async (req, res) => {
         );
 
 
-        // Remove OAuth information from session
         delete req.session.oauthState;
         delete req.session.codeVerifier;
 
 
-        // Return to MetroMarkets
         res.redirect(
             "https://kennethtube.github.io/metromarkets/"
         );
@@ -223,7 +227,8 @@ app.get("/api/me", async (req, res) => {
         }
 
 
-        const robloxId = req.session.user.sub;
+        const robloxId =
+            req.session.user.sub;
 
 
         const result = await db.query(
@@ -249,7 +254,8 @@ app.get("/api/me", async (req, res) => {
         }
 
 
-        const account = result.rows[0];
+        const account =
+            result.rows[0];
 
 
         res.json({
@@ -280,6 +286,113 @@ app.get("/api/me", async (req, res) => {
 
 
 // ================================
+// SPEND MC
+// ================================
+
+app.post("/api/account/spend", async (req, res) => {
+
+    try {
+
+        // Make sure the user is logged in
+        if (!req.session.user) {
+
+            return res.status(401).json({
+                success: false,
+                message: "You must be logged in."
+            });
+
+        }
+
+
+        const robloxId =
+            req.session.user.sub;
+
+        const amount =
+            Number(req.body.amount);
+
+
+        // Validate amount
+        if (
+            !Number.isInteger(amount) ||
+            amount <= 0
+        ) {
+
+            return res.status(400).json({
+                success: false,
+                message:
+                    "Amount must be a positive whole number."
+            });
+
+        }
+
+
+        // Prevent unreasonable purchases
+        if (amount > 1000000) {
+
+            return res.status(400).json({
+                success: false,
+                message:
+                    "Amount is too large."
+            });
+
+        }
+
+
+        // Deduct balance only if
+        // the user has enough MC
+        const result = await db.query(
+            `
+            UPDATE users
+            SET balance = balance - $1
+            WHERE roblox_id = $2
+            AND balance >= $1
+            RETURNING balance
+            `,
+            [
+                amount,
+                robloxId
+            ]
+        );
+
+
+        // Not enough MC
+        if (result.rows.length === 0) {
+
+            return res.status(400).json({
+                success: false,
+                message:
+                    "Insufficient balance."
+            });
+
+        }
+
+
+        const newBalance =
+            result.rows[0].balance;
+
+
+        res.json({
+            success: true,
+            balance: newBalance
+        });
+
+    } catch (error) {
+
+        console.error(
+            "Spend balance error:",
+            error.message
+        );
+
+        res.status(500).json({
+            success: false,
+            message:
+                "Failed to update balance."
+        });
+    }
+});
+
+
+// ================================
 // LOGOUT
 // ================================
 
@@ -291,10 +404,12 @@ app.get("/auth/logout", (req, res) => {
 
             return res.status(500).json({
                 success: false,
-                message: "Logout failed."
+                message:
+                    "Logout failed."
             });
 
         }
+
 
         res.redirect(
             "https://kennethtube.github.io/metromarkets/"
@@ -319,6 +434,7 @@ async function startServer() {
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
         `);
+
 
         console.log(
             "Database connected and users table ready."
