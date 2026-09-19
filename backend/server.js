@@ -280,7 +280,70 @@ app.get("/api/me", async (req, res) => {
 
         res.status(500).json({
             success: false,
-            message: "Failed to load account."
+            message:
+                "Failed to load account."
+        });
+    }
+});
+
+
+// ================================
+// GET USER TRADES
+// ================================
+
+app.get("/api/trades", async (req, res) => {
+
+    try {
+
+        // Make sure the user is logged in
+        if (!req.session.user) {
+
+            return res.status(401).json({
+                success: false,
+                message:
+                    "You must be logged in."
+            });
+
+        }
+
+
+        const robloxId =
+            req.session.user.sub;
+
+
+        const result = await db.query(
+            `
+            SELECT
+                id,
+                market_id,
+                side,
+                amount,
+                price,
+                created_at
+            FROM trades
+            WHERE roblox_id = $1
+            ORDER BY created_at DESC, id DESC
+            `,
+            [robloxId]
+        );
+
+
+        res.json({
+            success: true,
+            trades: result.rows
+        });
+
+    } catch (error) {
+
+        console.error(
+            "Trades database error:",
+            error.message
+        );
+
+        res.status(500).json({
+            success: false,
+            message:
+                "Failed to load trades."
         });
     }
 });
@@ -301,7 +364,8 @@ app.post("/api/account/spend", async (req, res) => {
 
             return res.status(401).json({
                 success: false,
-                message: "You must be logged in."
+                message:
+                    "You must be logged in."
             });
 
         }
@@ -314,11 +378,16 @@ app.post("/api/account/spend", async (req, res) => {
         const amount =
             Number(req.body.amount);
 
+
         const marketId =
             Number(req.body.marketId);
 
+
         const side =
-            String(req.body.side || "").toUpperCase();
+            String(
+                req.body.side || ""
+            ).toUpperCase();
+
 
         const price =
             Number(req.body.price);
@@ -397,7 +466,7 @@ app.post("/api/account/spend", async (req, res) => {
         }
 
 
-        // Get a PostgreSQL connection
+        // Get PostgreSQL connection
         client = await db.connect();
 
 
@@ -405,7 +474,7 @@ app.post("/api/account/spend", async (req, res) => {
         await client.query("BEGIN");
 
 
-        // Deduct the MC
+        // Deduct MC
         const balanceResult = await client.query(
             `
             UPDATE users
@@ -464,12 +533,13 @@ app.post("/api/account/spend", async (req, res) => {
         );
 
 
-        // Commit both changes
+        // Commit both operations
         await client.query("COMMIT");
 
 
         const trade =
             tradeResult.rows[0];
+
 
         const newBalance =
             balanceResult.rows[0].balance;
@@ -486,7 +556,9 @@ app.post("/api/account/spend", async (req, res) => {
         if (client) {
 
             try {
+
                 await client.query("ROLLBACK");
+
             } catch (rollbackError) {
 
                 console.error(
@@ -601,5 +673,6 @@ async function startServer() {
 
     }
 }
+
 
 startServer();
