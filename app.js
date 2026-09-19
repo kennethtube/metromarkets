@@ -172,6 +172,222 @@ function closeModal() {
 
 
 // ================================
+// GET MARKET BY ID
+// ================================
+
+function getMarketById(id) {
+
+    return markets.find(
+        market => market.id === Number(id)
+    );
+}
+
+
+// ================================
+// FORMAT TRADE TIME
+// ================================
+
+function formatTradeTime(timestamp) {
+
+    if (!timestamp) {
+        return "Unknown time";
+    }
+
+    const date =
+        new Date(timestamp);
+
+    if (Number.isNaN(date.getTime())) {
+        return "Unknown time";
+    }
+
+    return date.toLocaleString();
+}
+
+
+// ================================
+// LOAD USER TRADES
+// ================================
+
+async function loadTrades() {
+
+    const portfolioText =
+        document.getElementById("portfolioText");
+
+
+    if (!portfolioText) {
+        return;
+    }
+
+
+    try {
+
+        const response = await fetch(
+            `${API_URL}/api/trades`,
+            {
+                credentials: "include"
+            }
+        );
+
+
+        const data =
+            await response.json();
+
+
+        if (!response.ok) {
+
+            portfolioText.textContent =
+                data.message ||
+                "Failed to load your trades.";
+
+            return;
+        }
+
+
+        const trades =
+            Array.isArray(data.trades)
+                ? data.trades
+                : [];
+
+
+        // Update open position count
+        const positionsElement =
+            document.getElementById("positions");
+
+        if (positionsElement) {
+
+            positionsElement.textContent =
+                trades.length;
+        }
+
+
+        // No trades
+        if (trades.length === 0) {
+
+            portfolioText.innerHTML = `
+                <div class="portfolio-empty">
+                    <strong>No trades yet.</strong>
+                    <p>
+                        Your completed trades will appear here.
+                    </p>
+                </div>
+            `;
+
+            return;
+        }
+
+
+        // Render trades
+        portfolioText.innerHTML = `
+
+            <div class="trade-history">
+
+                <div class="trade-history-header">
+
+                    <strong>
+                        Trade History
+                    </strong>
+
+                    <span>
+                        ${trades.length}
+                        ${trades.length === 1 ? "trade" : "trades"}
+                    </span>
+
+                </div>
+
+
+                <div class="trade-history-list">
+
+                    ${trades.map(trade => {
+
+                        const market =
+                            getMarketById(
+                                trade.market_id
+                            );
+
+
+                        const marketName =
+                            market
+                                ? market.title
+                                : `Market #${trade.market_id}`;
+
+
+                        const side =
+                            String(
+                                trade.side || ""
+                            ).toUpperCase();
+
+
+                        const sideClass =
+                            side === "YES"
+                                ? "yes"
+                                : "no";
+
+
+                        return `
+
+                            <div class="trade-history-item">
+
+                                <div class="trade-history-main">
+
+                                    <strong>
+                                        ${side}
+                                    </strong>
+
+                                    <span>
+                                        ${marketName}
+                                    </span>
+
+                                </div>
+
+
+                                <div class="trade-history-details">
+
+                                    <span>
+                                        ${Number(trade.amount).toLocaleString()} MC
+                                    </span>
+
+                                    <span>
+                                        ${trade.price}¢
+                                    </span>
+
+                                </div>
+
+
+                                <div class="trade-history-time">
+
+                                    ${formatTradeTime(
+                                        trade.created_at
+                                    )}
+
+                                </div>
+
+                            </div>
+
+                        `;
+
+                    }).join("")}
+
+                </div>
+
+            </div>
+        `;
+
+
+    } catch (error) {
+
+        console.error(
+            "Load trades failed:",
+            error
+        );
+
+
+        portfolioText.textContent =
+            "Could not connect to the trading server.";
+    }
+}
+
+
+// ================================
 // PLACE TRADE
 // ================================
 
@@ -278,6 +494,7 @@ async function placeTrade(side) {
         }
 
 
+        // Update balance
         document.getElementById(
             "balance"
         ).textContent =
@@ -286,18 +503,21 @@ async function placeTrade(side) {
             " MC";
 
 
+        // Clear amount
         amountInput.value = "";
 
 
+        // Close modal
         closeModal();
+
+
+        // Reload portfolio
+        await loadTrades();
 
 
         alert(
             `Bought ${side} for ${amount.toLocaleString()} MC at ${price}¢.`
         );
-
-
-        await checkLogin();
 
 
     } catch (error) {
@@ -306,6 +526,7 @@ async function placeTrade(side) {
             "Trade failed:",
             error
         );
+
 
         alert(
             "Could not connect to the trading server."
@@ -357,6 +578,7 @@ async function checkLogin() {
                 `Roblox ID: ${data.user.sub}`;
 
 
+            // Load balance
             document.getElementById(
                 "balance"
             ).textContent =
@@ -365,12 +587,14 @@ async function checkLogin() {
                 " MC";
 
 
+            // Account information
             document.getElementById(
                 "account"
             ).textContent =
                 username;
 
 
+            // Change login button to logout
             loginButton.textContent =
                 "Logout";
 
@@ -386,10 +610,9 @@ async function checkLogin() {
             };
 
 
-            document.getElementById(
-                "portfolioText"
-            ).textContent =
-                `Logged in as ${username}. Your portfolio will appear here.`;
+            // Load trades
+            await loadTrades();
+
 
         } else {
 
@@ -402,10 +625,24 @@ async function checkLogin() {
             loginButton.onclick =
                 login;
 
+
             document.getElementById(
                 "account"
             ).textContent =
                 "Guest";
+
+
+            document.getElementById(
+                "positions"
+            ).textContent =
+                "0";
+
+
+            document.getElementById(
+                "portfolioText"
+            ).textContent =
+                "Log in with Roblox to view your portfolio and place trades.";
+
         }
 
 
