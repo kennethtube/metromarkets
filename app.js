@@ -318,15 +318,19 @@ async function loadPositions() {
         }
 
 
-        // No positions
         if (positions.length === 0) {
 
             portfolioText.innerHTML = `
                 <div class="portfolio-empty">
-                    <strong>No open positions.</strong>
+
+                    <strong>
+                        No open positions.
+                    </strong>
+
                     <p>
                         Your positions will appear here after you place a trade.
                     </p>
+
                 </div>
             `;
 
@@ -423,6 +427,12 @@ async function loadPositions() {
                             invested;
 
 
+                        const sideClass =
+                            side === "NO"
+                                ? "no"
+                                : "yes";
+
+
                         return `
 
                             <div class="position-card">
@@ -431,7 +441,7 @@ async function loadPositions() {
 
                                     <div>
 
-                                        <span class="category">
+                                        <span class="category ${sideClass}">
                                             ${side}
                                         </span>
 
@@ -510,7 +520,7 @@ async function loadPositions() {
                                             Unrealized
                                         </span>
 
-                                        <strong>
+                                        <strong class="${unrealizedValue < 0 ? "negative" : "positive"}">
                                             ${unrealizedValue >= 0 ? "+" : ""}
                                             ${formatNumber(unrealizedValue, 2)} MC
                                         </strong>
@@ -634,13 +644,19 @@ async function loadTradeHistory() {
                             ).toUpperCase();
 
 
+                        const sideClass =
+                            side === "NO"
+                                ? "no"
+                                : "yes";
+
+
                         return `
 
                             <div class="trade-history-item">
 
                                 <div class="trade-history-main">
 
-                                    <strong>
+                                    <strong class="${sideClass}">
                                         ${side}
                                     </strong>
 
@@ -821,7 +837,6 @@ async function placeTrade(side) {
         }
 
 
-        // Update balance
         document.getElementById(
             "balance"
         ).textContent =
@@ -832,19 +847,15 @@ async function placeTrade(side) {
             " MC";
 
 
-        // Clear input
         amountInput.value = "";
 
 
-        // Close modal
         closeModal();
 
 
-        // Reload positions
         await loadPositions();
 
 
-        // Reload trade history
         await loadTradeHistory();
 
 
@@ -912,7 +923,6 @@ async function checkLogin() {
                 `Roblox ID: ${data.user.sub}`;
 
 
-            // Load balance
             document.getElementById(
                 "balance"
             ).textContent =
@@ -923,14 +933,12 @@ async function checkLogin() {
                 " MC";
 
 
-            // Account information
             document.getElementById(
                 "account"
             ).textContent =
                 username;
 
 
-            // Logout button
             loginButton.textContent =
                 "Logout";
 
@@ -946,11 +954,9 @@ async function checkLogin() {
             };
 
 
-            // Load positions
             await loadPositions();
 
 
-            // Load history
             await loadTradeHistory();
 
 
