@@ -11,6 +11,7 @@
 <body>
 
 <header>
+
     <div class="brand">
         METRO<span>MARKETS</span>
     </div>
@@ -18,16 +19,23 @@
     <nav>
         <a href="#markets">Markets</a>
         <a href="#portfolio">Portfolio</a>
-        <button id="loginBtn">Login with Roblox</button>
+
+        <button id="loginBtn">
+            Login with Roblox
+        </button>
     </nav>
+
 </header>
 
 
 <main>
 
+    <!-- HERO -->
+
     <section class="hero">
 
         <div>
+
             <p class="eyebrow">
                 VIRTUAL PREDICTION EXCHANGE
             </p>
@@ -48,6 +56,7 @@
             >
                 Explore markets ↓
             </button>
+
         </div>
 
 
@@ -76,11 +85,17 @@
     </section>
 
 
-    <section id="markets" class="section">
+    <!-- MARKETS -->
+
+    <section
+        id="markets"
+        class="section"
+    >
 
         <div class="section-head">
 
             <div>
+
                 <p class="eyebrow">
                     LIVE BOARD
                 </p>
@@ -88,6 +103,7 @@
                 <h2>
                     Open markets
                 </h2>
+
             </div>
 
             <span class="pill">
@@ -95,6 +111,7 @@
             </span>
 
         </div>
+
 
         <div
             id="marketGrid"
@@ -104,24 +121,43 @@
     </section>
 
 
+    <!-- PORTFOLIO -->
+
     <section
         id="portfolio"
         class="section portfolio"
     >
 
-        <p class="eyebrow">
-            YOUR ACTIVITY
-        </p>
+        <div class="section-head">
 
-        <h2>
-            Portfolio
-        </h2>
+            <div>
 
-        <div class="panel">
+                <p class="eyebrow">
+                    YOUR ACTIVITY
+                </p>
 
-            <p id="portfolioText">
+                <h2>
+                    Portfolio
+                </h2>
+
+            </div>
+
+        </div>
+
+
+        <div class="panel portfolio-panel">
+
+            <!--
+                This must be a DIV rather than a P because
+                JavaScript inserts position and trade cards here.
+            -->
+
+            <div
+                id="portfolioText"
+                class="portfolio-content"
+            >
                 Log in with Roblox to view your portfolio and place trades.
-            </p>
+            </div>
 
         </div>
 
@@ -129,6 +165,8 @@
 
 </main>
 
+
+<!-- TRADE MODAL -->
 
 <div
     id="tradeModal"
@@ -205,7 +243,7 @@
 </div>
 
 
-<script src="app.js?v=2"></script>
+<script src="app.js?v=4"></script>
 
 </body>
 
