@@ -69,6 +69,10 @@ function render() {
     const marketGrid =
         document.getElementById("marketGrid");
 
+    if (!marketGrid) {
+        return;
+    }
+
     marketGrid.innerHTML = markets.map(m => `
         <article class="market-card">
 
@@ -122,29 +126,40 @@ function openModal(id) {
         return;
     }
 
+
     document.getElementById(
         "modalCategory"
-    ).textContent = selected.category;
+    ).textContent =
+        selected.category;
+
 
     document.getElementById(
         "modalTitle"
-    ).textContent = selected.title;
+    ).textContent =
+        selected.title;
+
 
     document.getElementById(
         "modalQuestion"
-    ).textContent = selected.question;
+    ).textContent =
+        selected.question;
+
 
     document.getElementById(
         "yesPrice"
-    ).textContent = selected.yes + "¢";
+    ).textContent =
+        selected.yes + "¢";
+
 
     document.getElementById(
         "noPrice"
-    ).textContent = (100 - selected.yes) + "¢";
+    ).textContent =
+        (100 - selected.yes) + "¢";
 
 
     const amountInput =
         document.getElementById("tradeAmount");
+
 
     if (amountInput) {
         amountInput.value = "";
@@ -178,7 +193,35 @@ function closeModal() {
 function getMarketById(id) {
 
     return markets.find(
-        market => market.id === Number(id)
+        market =>
+            market.id === Number(id)
+    );
+}
+
+
+// ================================
+// FORMAT NUMBER
+// ================================
+
+function formatNumber(value, decimals = 2) {
+
+    const number =
+        Number(value);
+
+    if (!Number.isFinite(number)) {
+        return "0";
+    }
+
+
+    return number.toLocaleString(
+        undefined,
+        {
+            minimumFractionDigits:
+                decimals,
+
+            maximumFractionDigits:
+                decimals
+        }
     );
 }
 
@@ -193,25 +236,35 @@ function formatTradeTime(timestamp) {
         return "Unknown time";
     }
 
+
     const date =
         new Date(timestamp);
 
-    if (Number.isNaN(date.getTime())) {
+
+    if (
+        Number.isNaN(
+            date.getTime()
+        )
+    ) {
+
         return "Unknown time";
     }
+
 
     return date.toLocaleString();
 }
 
 
 // ================================
-// LOAD USER TRADES
+// LOAD USER POSITIONS
 // ================================
 
-async function loadTrades() {
+async function loadPositions() {
 
     const portfolioText =
-        document.getElementById("portfolioText");
+        document.getElementById(
+            "portfolioText"
+        );
 
 
     if (!portfolioText) {
@@ -221,12 +274,13 @@ async function loadTrades() {
 
     try {
 
-        const response = await fetch(
-            `${API_URL}/api/trades`,
-            {
-                credentials: "include"
-            }
-        );
+        const response =
+            await fetch(
+                `${API_URL}/api/positions`,
+                {
+                    credentials: "include"
+                }
+            );
 
 
         const data =
@@ -237,37 +291,41 @@ async function loadTrades() {
 
             portfolioText.textContent =
                 data.message ||
-                "Failed to load your trades.";
+                "Failed to load your positions.";
 
             return;
         }
 
 
-        const trades =
-            Array.isArray(data.trades)
-                ? data.trades
+        const positions =
+            Array.isArray(
+                data.positions
+            )
+                ? data.positions
                 : [];
 
 
-        // Update open position count
         const positionsElement =
-            document.getElementById("positions");
+            document.getElementById(
+                "positions"
+            );
+
 
         if (positionsElement) {
 
             positionsElement.textContent =
-                trades.length;
+                positions.length;
         }
 
 
-        // No trades
-        if (trades.length === 0) {
+        // No positions
+        if (positions.length === 0) {
 
             portfolioText.innerHTML = `
                 <div class="portfolio-empty">
-                    <strong>No trades yet.</strong>
+                    <strong>No open positions.</strong>
                     <p>
-                        Your completed trades will appear here.
+                        Your positions will appear here after you place a trade.
                     </p>
                 </div>
             `;
@@ -276,8 +334,265 @@ async function loadTrades() {
         }
 
 
-        // Render trades
         portfolioText.innerHTML = `
+
+            <div class="portfolio-positions">
+
+                <div class="portfolio-header">
+
+                    <strong>
+                        Open Positions
+                    </strong>
+
+                    <span>
+                        ${positions.length}
+                        ${positions.length === 1
+                            ? "position"
+                            : "positions"}
+                    </span>
+
+                </div>
+
+
+                <div class="position-list">
+
+                    ${positions.map(position => {
+
+                        const market =
+                            getMarketById(
+                                position.market_id
+                            );
+
+
+                        const marketName =
+                            market
+                                ? market.title
+                                : `Market #${position.market_id}`;
+
+
+                        const side =
+                            String(
+                                position.side || ""
+                            ).toUpperCase();
+
+
+                        const currentPrice =
+                            market
+                                ? (
+                                    side === "YES"
+                                        ? market.yes
+                                        : 100 - market.yes
+                                )
+                                : Number(
+                                    position.average_price
+                                );
+
+
+                        const shares =
+                            Number(
+                                position.shares
+                            );
+
+
+                        const invested =
+                            Number(
+                                position.total_invested
+                            );
+
+
+                        const averagePrice =
+                            Number(
+                                position.average_price
+                            );
+
+
+                        const currentValue =
+                            shares *
+                            (
+                                currentPrice /
+                                100
+                            );
+
+
+                        const potentialPayout =
+                            shares;
+
+
+                        const unrealizedValue =
+                            currentValue -
+                            invested;
+
+
+                        return `
+
+                            <div class="position-card">
+
+                                <div class="position-top">
+
+                                    <div>
+
+                                        <span class="category">
+                                            ${side}
+                                        </span>
+
+                                        <h3>
+                                            ${marketName}
+                                        </h3>
+
+                                    </div>
+
+                                    <strong>
+                                        ${currentPrice}¢
+                                    </strong>
+
+                                </div>
+
+
+                                <div class="position-stats">
+
+                                    <div>
+                                        <span>
+                                            Invested
+                                        </span>
+
+                                        <strong>
+                                            ${formatNumber(invested, 0)} MC
+                                        </strong>
+                                    </div>
+
+
+                                    <div>
+                                        <span>
+                                            Shares
+                                        </span>
+
+                                        <strong>
+                                            ${formatNumber(shares, 2)}
+                                        </strong>
+                                    </div>
+
+
+                                    <div>
+                                        <span>
+                                            Avg. Price
+                                        </span>
+
+                                        <strong>
+                                            ${formatNumber(averagePrice, 2)}¢
+                                        </strong>
+                                    </div>
+
+
+                                    <div>
+                                        <span>
+                                            Current Value
+                                        </span>
+
+                                        <strong>
+                                            ${formatNumber(currentValue, 2)} MC
+                                        </strong>
+                                    </div>
+
+
+                                    <div>
+                                        <span>
+                                            Potential Payout
+                                        </span>
+
+                                        <strong>
+                                            ${formatNumber(potentialPayout, 2)} MC
+                                        </strong>
+                                    </div>
+
+
+                                    <div>
+                                        <span>
+                                            Unrealized
+                                        </span>
+
+                                        <strong>
+                                            ${unrealizedValue >= 0 ? "+" : ""}
+                                            ${formatNumber(unrealizedValue, 2)} MC
+                                        </strong>
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+                        `;
+
+                    }).join("")}
+
+                </div>
+
+            </div>
+        `;
+
+
+    } catch (error) {
+
+        console.error(
+            "Load positions failed:",
+            error
+        );
+
+
+        portfolioText.textContent =
+            "Could not connect to the trading server.";
+    }
+}
+
+
+// ================================
+// LOAD TRADE HISTORY
+// ================================
+
+async function loadTradeHistory() {
+
+    try {
+
+        const response =
+            await fetch(
+                `${API_URL}/api/trades`,
+                {
+                    credentials: "include"
+                }
+            );
+
+
+        const data =
+            await response.json();
+
+
+        if (!response.ok) {
+            return;
+        }
+
+
+        const trades =
+            Array.isArray(
+                data.trades
+            )
+                ? data.trades
+                : [];
+
+
+        const portfolioText =
+            document.getElementById(
+                "portfolioText"
+            );
+
+
+        if (
+            !portfolioText ||
+            trades.length === 0
+        ) {
+            return;
+        }
+
+
+        const historyHTML = `
 
             <div class="trade-history">
 
@@ -289,7 +604,9 @@ async function loadTrades() {
 
                     <span>
                         ${trades.length}
-                        ${trades.length === 1 ? "trade" : "trades"}
+                        ${trades.length === 1
+                            ? "trade"
+                            : "trades"}
                     </span>
 
                 </div>
@@ -315,12 +632,6 @@ async function loadTrades() {
                             String(
                                 trade.side || ""
                             ).toUpperCase();
-
-
-                        const sideClass =
-                            side === "YES"
-                                ? "yes"
-                                : "no";
 
 
                         return `
@@ -373,16 +684,16 @@ async function loadTrades() {
         `;
 
 
+        portfolioText.innerHTML +=
+            historyHTML;
+
+
     } catch (error) {
 
         console.error(
-            "Load trades failed:",
+            "Load trade history failed:",
             error
         );
-
-
-        portfolioText.textContent =
-            "Could not connect to the trading server.";
     }
 }
 
@@ -394,7 +705,9 @@ async function loadTrades() {
 async function placeTrade(side) {
 
     const amountInput =
-        document.getElementById("tradeAmount");
+        document.getElementById(
+            "tradeAmount"
+        );
 
 
     if (!amountInput) {
@@ -418,7 +731,9 @@ async function placeTrade(side) {
 
 
     const amount =
-        Number(amountInput.value);
+        Number(
+            amountInput.value
+        );
 
 
     if (
@@ -439,11 +754,13 @@ async function placeTrade(side) {
 
     if (side === "YES") {
 
-        price = selected.yes;
+        price =
+            selected.yes;
 
     } else if (side === "NO") {
 
-        price = 100 - selected.yes;
+        price =
+            100 - selected.yes;
 
     } else {
 
@@ -457,26 +774,36 @@ async function placeTrade(side) {
 
     try {
 
-        const response = await fetch(
-            `${API_URL}/api/account/spend`,
-            {
-                method: "POST",
+        const response =
+            await fetch(
+                `${API_URL}/api/account/spend`,
+                {
+                    method: "POST",
 
-                credentials: "include",
+                    credentials: "include",
 
-                headers: {
-                    "Content-Type":
-                        "application/json"
-                },
+                    headers: {
+                        "Content-Type":
+                            "application/json"
+                    },
 
-                body: JSON.stringify({
-                    marketId: selected.id,
-                    side: side,
-                    amount: amount,
-                    price: price
-                })
-            }
-        );
+                    body: JSON.stringify({
+
+                        marketId:
+                            selected.id,
+
+                        side:
+                            side,
+
+                        amount:
+                            amount,
+
+                        price:
+                            price
+
+                    })
+                }
+            );
 
 
         const data =
@@ -498,12 +825,14 @@ async function placeTrade(side) {
         document.getElementById(
             "balance"
         ).textContent =
-            Number(data.balance)
-                .toLocaleString() +
+            Number(
+                data.balance
+            )
+            .toLocaleString() +
             " MC";
 
 
-        // Clear amount
+        // Clear input
         amountInput.value = "";
 
 
@@ -511,8 +840,12 @@ async function placeTrade(side) {
         closeModal();
 
 
-        // Reload portfolio
-        await loadTrades();
+        // Reload positions
+        await loadPositions();
+
+
+        // Reload trade history
+        await loadTradeHistory();
 
 
         alert(
@@ -554,12 +887,13 @@ async function checkLogin() {
 
     try {
 
-        const response = await fetch(
-            `${API_URL}/api/me`,
-            {
-                credentials: "include"
-            }
-        );
+        const response =
+            await fetch(
+                `${API_URL}/api/me`,
+                {
+                    credentials: "include"
+                }
+            );
 
 
         const data =
@@ -582,8 +916,10 @@ async function checkLogin() {
             document.getElementById(
                 "balance"
             ).textContent =
-                Number(data.balance)
-                    .toLocaleString() +
+                Number(
+                    data.balance
+                )
+                .toLocaleString() +
                 " MC";
 
 
@@ -594,7 +930,7 @@ async function checkLogin() {
                 username;
 
 
-            // Change login button to logout
+            // Logout button
             loginButton.textContent =
                 "Logout";
 
@@ -610,8 +946,12 @@ async function checkLogin() {
             };
 
 
-            // Load trades
-            await loadTrades();
+            // Load positions
+            await loadPositions();
+
+
+            // Load history
+            await loadTradeHistory();
 
 
         } else {
