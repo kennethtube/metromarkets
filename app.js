@@ -143,7 +143,6 @@ function openModal(id) {
     ).textContent = (100 - selected.yes) + "¢";
 
 
-    // Clear previous amount
     const amountInput =
         document.getElementById("tradeAmount");
 
@@ -219,13 +218,17 @@ async function placeTrade(side) {
     }
 
 
-    // Determine the price
     let price;
 
+
     if (side === "YES") {
+
         price = selected.yes;
+
     } else if (side === "NO") {
+
         price = 100 - selected.yes;
+
     } else {
 
         alert(
@@ -275,7 +278,6 @@ async function placeTrade(side) {
         }
 
 
-        // Update displayed balance
         document.getElementById(
             "balance"
         ).textContent =
@@ -284,27 +286,9 @@ async function placeTrade(side) {
             " MC";
 
 
-        // Increase open positions display
-        const positionsElement =
-            document.getElementById("positions");
-
-        if (positionsElement) {
-
-            const currentPositions =
-                Number(
-                    positionsElement.textContent
-                ) || 0;
-
-            positionsElement.textContent =
-                currentPositions + 1;
-        }
-
-
-        // Clear amount
         amountInput.value = "";
 
 
-        // Close the modal
         closeModal();
 
 
@@ -313,7 +297,6 @@ async function placeTrade(side) {
         );
 
 
-        // Refresh account information
         await checkLogin();
 
 
@@ -323,7 +306,6 @@ async function placeTrade(side) {
             "Trade failed:",
             error
         );
-
 
         alert(
             "Could not connect to the trading server."
@@ -369,17 +351,12 @@ async function checkLogin() {
             );
 
 
-        // ============================
-        // LOGGED IN
-        // ============================
-
         if (data.loggedIn) {
 
             const username =
                 `Roblox ID: ${data.user.sub}`;
 
 
-            // Load balance from PostgreSQL
             document.getElementById(
                 "balance"
             ).textContent =
@@ -388,14 +365,12 @@ async function checkLogin() {
                 " MC";
 
 
-            // Account information
             document.getElementById(
                 "account"
             ).textContent =
                 username;
 
 
-            // Change login button to logout
             loginButton.textContent =
                 "Logout";
 
@@ -411,20 +386,12 @@ async function checkLogin() {
             };
 
 
-            // Portfolio information
             document.getElementById(
                 "portfolioText"
             ).textContent =
                 `Logged in as ${username}. Your portfolio will appear here.`;
 
-        }
-
-
-        // ============================
-        // NOT LOGGED IN
-        // ============================
-
-        else {
+        } else {
 
             loginButton.textContent =
                 "Login with Roblox";
@@ -439,7 +406,6 @@ async function checkLogin() {
                 "account"
             ).textContent =
                 "Guest";
-
         }
 
 
