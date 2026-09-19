@@ -287,10 +287,12 @@ app.get("/api/me", async (req, res) => {
 
 
 // ================================
-// SPEND MC
+// PLACE TRADE
 // ================================
 
 app.post("/api/account/spend", async (req, res) => {
+
+    let client;
 
     try {
 
@@ -308,8 +310,18 @@ app.post("/api/account/spend", async (req, res) => {
         const robloxId =
             req.session.user.sub;
 
+
         const amount =
             Number(req.body.amount);
+
+        const marketId =
+            Number(req.body.marketId);
+
+        const side =
+            String(req.body.side || "").toUpperCase();
+
+        const price =
+            Number(req.body.price);
 
 
         // Validate amount
@@ -339,9 +351,62 @@ app.post("/api/account/spend", async (req, res) => {
         }
 
 
-        // Deduct balance only if
-        // the user has enough MC
-        const result = await db.query(
+        // Validate market
+        if (
+            !Number.isInteger(marketId) ||
+            marketId <= 0
+        ) {
+
+            return res.status(400).json({
+                success: false,
+                message:
+                    "Invalid market."
+            });
+
+        }
+
+
+        // Validate side
+        if (
+            side !== "YES" &&
+            side !== "NO"
+        ) {
+
+            return res.status(400).json({
+                success: false,
+                message:
+                    "Trade side must be YES or NO."
+            });
+
+        }
+
+
+        // Validate price
+        if (
+            !Number.isInteger(price) ||
+            price < 1 ||
+            price > 99
+        ) {
+
+            return res.status(400).json({
+                success: false,
+                message:
+                    "Invalid market price."
+            });
+
+        }
+
+
+        // Get a PostgreSQL connection
+        client = await db.connect();
+
+
+        // Start transaction
+        await client.query("BEGIN");
+
+
+        // Deduct the MC
+        const balanceResult = await client.query(
             `
             UPDATE users
             SET balance = balance - $1
@@ -357,7 +422,9 @@ app.post("/api/account/spend", async (req, res) => {
 
 
         // Not enough MC
-        if (result.rows.length === 0) {
+        if (balanceResult.rows.length === 0) {
+
+            await client.query("ROLLBACK");
 
             return res.status(400).json({
                 success: false,
@@ -368,27 +435,87 @@ app.post("/api/account/spend", async (req, res) => {
         }
 
 
+        // Save the trade
+        const tradeResult = await client.query(
+            `
+            INSERT INTO trades (
+                roblox_id,
+                market_id,
+                side,
+                amount,
+                price
+            )
+            VALUES ($1, $2, $3, $4, $5)
+            RETURNING
+                id,
+                market_id,
+                side,
+                amount,
+                price,
+                created_at
+            `,
+            [
+                robloxId,
+                marketId,
+                side,
+                amount,
+                price
+            ]
+        );
+
+
+        // Commit both changes
+        await client.query("COMMIT");
+
+
+        const trade =
+            tradeResult.rows[0];
+
         const newBalance =
-            result.rows[0].balance;
+            balanceResult.rows[0].balance;
 
 
         res.json({
             success: true,
-            balance: newBalance
+            balance: newBalance,
+            trade: trade
         });
 
     } catch (error) {
 
+        if (client) {
+
+            try {
+                await client.query("ROLLBACK");
+            } catch (rollbackError) {
+
+                console.error(
+                    "Rollback error:",
+                    rollbackError.message
+                );
+
+            }
+        }
+
+
         console.error(
-            "Spend balance error:",
+            "Trade error:",
             error.message
         );
+
 
         res.status(500).json({
             success: false,
             message:
-                "Failed to update balance."
+                "Failed to place trade."
         });
+
+    } finally {
+
+        if (client) {
+            client.release();
+        }
+
     }
 });
 
