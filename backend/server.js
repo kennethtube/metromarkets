@@ -167,6 +167,7 @@ app.get("/auth/roblox/callback", async (req, res) => {
 
         const robloxUser = userResponse.data;
 
+
         console.log(
             "Roblox login successful:",
             robloxUser.sub
@@ -426,6 +427,7 @@ async function startServer() {
 
     try {
 
+        // Users table
         await db.query(`
             CREATE TABLE IF NOT EXISTS users (
                 id SERIAL PRIMARY KEY,
@@ -436,8 +438,22 @@ async function startServer() {
         `);
 
 
+        // Trades table
+        await db.query(`
+            CREATE TABLE IF NOT EXISTS trades (
+                id SERIAL PRIMARY KEY,
+                roblox_id TEXT NOT NULL,
+                market_id INTEGER NOT NULL,
+                side TEXT NOT NULL,
+                amount BIGINT NOT NULL,
+                price INTEGER NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        `);
+
+
         console.log(
-            "Database connected and users table ready."
+            "Database connected and tables ready."
         );
 
 
